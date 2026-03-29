@@ -1,0 +1,57 @@
+# ===== ENVIRONMENT & SECRETS =====
+.env
+.env.*
+!.env.example
+
+# ===== NODE =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== NEXT.JS =====
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/next-env.d.ts
+
+# ===== BUILD OUTPUTS =====
+dist/
+build/
+*.tsbuildinfo
+
+# ===== PRISMA =====
+backend/prisma/migrations/dev.db
+backend/prisma/*.db
+
+# ===== LOGS & RUNTIME =====
+*.log
+*.pid
+logs/
+backend/backend.log
+backend/backend.pid
+
+# ===== DOCKER VOLUMES =====
+postgres_data/
+docker-volumes/
+
+# ===== OS FILES =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== EDITORS =====
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== TESTING =====
+coverage/
+.nyc_output/
+
+# ===== MISC =====
+*.tgz
+*.zip

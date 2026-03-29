@@ -1,0 +1,39 @@
+# ===== ENVIRONMENT & SECRETS =====
+.env
+.env.*
+!.env.example
+
+# ===== DEPENDENCIES =====
+node_modules/
+
+# ===== BUILD =====
+dist/
+build/
+*.tsbuildinfo
+
+# ===== PRISMA =====
+prisma/*.db
+prisma/migrations/**/migration.sql.bak
+
+# ===== LOGS & RUNTIME =====
+*.log
+*.pid
+logs/
+backend.log
+backend.pid
+
+# ===== TESTING =====
+coverage/
+.nyc_output/
+
+# ===== CACHE =====
+.cache/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== EDITORS =====
+.idea/
+*.swp
+*.swo
