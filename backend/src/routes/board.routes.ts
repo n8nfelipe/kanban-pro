@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getBoards, createBoard, getBoardDetails, createColumn, createCard, updateCardOrder, updateCardColumn, updateCardFull } from '../controllers/board.controller';
+import { getBoards, createBoard, getBoardDetails, createColumn, createCard, updateCardOrder, updateCardColumn, updateCardFull, deleteCard } from '../controllers/board.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -16,5 +16,6 @@ router.post('/columns/:columnId/cards', createCard);
 router.put('/cards/:cardId/order', updateCardOrder);
 router.put('/cards/:cardId/move', updateCardColumn);
 router.put('/cards/:cardId', updateCardFull);
+router.delete('/cards/:cardId', deleteCard);
 
 export default router;

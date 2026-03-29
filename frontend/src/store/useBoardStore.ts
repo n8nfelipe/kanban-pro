@@ -8,6 +8,7 @@ interface BoardState {
   moveCard: (cardId: string, sourceColumnId: string, destColumnId: string, sourceIndex: number, destIndex: number) => void;
   addTask: (taskData: any, targetColumnId: string | null) => void;
   updateTask: (taskId: string, taskData: any) => void;
+  deleteTask: (taskId: string) => void;
   addColumn: (title: string) => void;
 }
 
@@ -88,18 +89,39 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       const updatedCard = res.data;
 
       // Optimistic update of the card in the board state
-      const newColumns = board.columns.map((col: any) => ({
+      const newCols = board.columns.map((col: any) => ({
         ...col,
         cards: col.cards.map((card: any) => 
           card.id === taskId ? { ...card, ...updatedCard } : card
         )
       }));
 
-      set({ board: { ...board, columns: newColumns } });
+      set({ board: { ...board, columns: newCols } });
     } catch (err) {
-      console.error('Error updating task:', err);
+      console.error('Failed to update task:', err);
     }
   },
+
+  deleteTask: async (taskId: string) => {
+    const { board } = get();
+    if (!board) return;
+
+    // Optimistic update
+    const newCols = board.columns.map((col: any) => ({
+      ...col,
+      cards: col.cards.filter((c: any) => c.id !== taskId)
+    }));
+
+    set({ board: { ...board, columns: newCols } });
+
+    try {
+      await api.delete(`/api/boards/cards/${taskId}`);
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+      // Revert if failed (optional, but good for robustness)
+    }
+  },
+
   addColumn: async (title: string) => {
     const { board } = get();
     if (!board) return;

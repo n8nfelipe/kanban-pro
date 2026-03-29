@@ -129,3 +129,13 @@ export const updateCardFull = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to update card' });
   }
 };
+export const deleteCard = async (req: Request, res: Response) => {
+  try {
+    await prisma.card.delete({
+      where: { id: req.params.cardId as string }
+    });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete card' });
+  }
+};

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { X, Calendar, User, Flag, AlignLeft } from 'lucide-react';
+import { X, Calendar, User, Flag, AlignLeft, Trash2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useBoardStore } from '@/store/useBoardStore';
 import { mockUsers } from '@/lib/mockData';
 
 export default function NewTaskModal() {
   const { isNewTaskModalOpen, closeNewTaskModal, newTaskTargetColumnId, editTaskId } = useAppStore();
-  const { board, addTask, updateTask } = useBoardStore();
+  const { board, addTask, updateTask, deleteTask } = useBoardStore();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -206,11 +206,31 @@ export default function NewTaskModal() {
           </div>
 
           {/* Footer actions */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-            <button type="button" className="btn-ghost" onClick={closeNewTaskModal}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={!title.trim()}>
-              {editTaskId ? 'Save Changes' : 'Create Task'}
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+            <div>
+              {editTaskId && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this task?')) {
+                      deleteTask(editTaskId);
+                      closeNewTaskModal();
+                    }
+                  }}
+                  className="btn-ghost"
+                  style={{ color: 'var(--neon-rose)', borderColor: 'rgba(244,63,94,0.2)' }}
+                >
+                  <Trash2 size={14} style={{ marginRight: '6px' }} />
+                  Delete Task
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button type="button" className="btn-ghost" onClick={closeNewTaskModal}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={!title.trim()}>
+                {editTaskId ? 'Save Changes' : 'Create Task'}
+              </button>
+            </div>
           </div>
 
         </form>
