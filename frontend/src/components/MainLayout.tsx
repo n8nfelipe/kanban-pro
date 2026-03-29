@@ -6,6 +6,9 @@ import {
   Filter, Zap, ChevronRight, BarChart3, Calendar, Inbox,
   Hash, Star, Activity, Command, GitPullRequest,
 } from 'lucide-react';
+import ListView from './ListView';
+import TimelineView from './TimelineView';
+import AnalyticsView from './AnalyticsView';
 
 const workspaces = [
   { id: 'w1', name: 'Engineering', icon: '⬡', accent: '#38bdf8', rgb: '56,189,248',  active: true,  count: 12 },
@@ -336,7 +339,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Content area */}
         <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: '20px 24px' }}>
-          {children}
+          {activeTab === 'Board' && children}
+          {activeTab === 'List' && <ListView />}
+          {activeTab === 'Timeline' && <TimelineView />}
+          {activeTab === 'Analytics' && <AnalyticsView />}
         </div>
       </main>
     </div>
