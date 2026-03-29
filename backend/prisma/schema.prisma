@@ -22,12 +22,27 @@ model User {
   updatedAt   DateTime @updatedAt
 }
 
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  accent    String?
+  rgb       String?
+  boards    Board[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Board {
   id          String   @id @default(uuid())
   name        String
   description String?
+  icon        String?
+  tag         String?
   ownerId     String
   owner       User     @relation("BoardOwner", fields: [ownerId], references: [id])
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   members     User[]   @relation("BoardMembers")
   columns     Column[]
   createdAt   DateTime @default(now())
@@ -51,6 +66,7 @@ model Card {
   description String?
   order       Int
   priority    String   @default("medium") // low, medium, high, urgent
+  startDate   DateTime?
   dueDate     DateTime?
   columnId    String
   column      Column   @relation(fields: [columnId], references: [id])

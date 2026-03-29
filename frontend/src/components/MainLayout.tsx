@@ -1,39 +1,71 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutGrid, Layers, Users, Settings2, Bell, Search, Plus,
   Filter, Zap, ChevronRight, BarChart3, Calendar, Inbox,
-  Hash, Star, Activity, Command, GitPullRequest,
+  Hash, Star, Activity, Command, GitPullRequest, Loader2
 } from 'lucide-react';
 import ListView from './ListView';
 import TimelineView from './TimelineView';
 import AnalyticsView from './AnalyticsView';
-
-const workspaces = [
-  { id: 'w1', name: 'Engineering', icon: '⬡', accent: '#38bdf8', rgb: '56,189,248',  active: true,  count: 12 },
-  { id: 'w2', name: 'Marketing',   icon: '◈', accent: '#a78bfa', rgb: '167,139,250', active: false, count: 5  },
-  { id: 'w3', name: 'Design',      icon: '◎', accent: '#34d399', rgb: '52,211,153',  active: false, count: 8  },
-];
-
-const boards = [
-  { id: 'b1', name: 'Sprint Backlog', icon: LayoutGrid, active: true,  tag: 'ACTIVE' },
-  { id: 'b2', name: 'Product Roadmap', icon: Layers,    active: false, tag: null },
-  { id: 'b3', name: 'Q2 Milestones',   icon: Star,      active: false, tag: null },
-];
+import TeamView from './TeamView';
+import InboxView from './InboxView';
+import SettingsView from './SettingsView';
+import NewTaskModal from './NewTaskModal';
+import NewBoardModal from './NewBoardModal';
+import { useAppStore, MainAppView, KanbanTab } from '@/store/useAppStore';
+// import { MOCK_WORKSPACES } from '@/lib/mockData';
 
 const bottomLinks = [
-  { icon: Users,     label: 'Team',     badge: null },
-  { icon: BarChart3, label: 'Analytics', badge: null },
-  { icon: Inbox,     label: 'Inbox',    badge: '3'  },
-  { icon: Settings2, label: 'Settings', badge: null },
+  { id: 'team',      icon: Users,     label: 'Team',      badge: null },
+  { id: 'analytics', icon: BarChart3, label: 'Analytics', badge: null },
+  { id: 'inbox',     icon: Inbox,     label: 'Inbox',     badge: '3'  },
+  { id: 'settings',  icon: Settings2, label: 'Settings',  badge: null },
 ];
 
-const viewTabs = ['Board', 'List', 'Timeline', 'Analytics'];
+const viewTabs: KanbanTab[] = ['Board', 'List', 'Timeline', 'Analytics'];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const [activeTab, setActiveTab] = useState('Board');
+  const {
+    activeWorkspaceId, activeBoardId, mainAppView, kanbanActiveTab, boardsList,
+    setWorkspace, setBoard, setMainView, setKanbanTab, openNewTaskModal, openNewBoardModal,
+    workspacesConfig, fetchWorkspaces
+  } = useAppStore();
+
   const [searchQuery, setSearchQuery] = useState('');
+  const [boardLoading, setBoardLoading] = useState(false);
+
+  useEffect(() => {
+    fetchWorkspaces();
+  }, [fetchWorkspaces]);
+
+  // Derive current display names
+  const currentWorkspace = workspacesConfig.find(w => w.id === activeWorkspaceId) || workspacesConfig[0] || { name: 'Loading...', accent: '#666', icon: '◌' };
+  const activeBoards = boardsList.filter(b => b.workspaceId === activeWorkspaceId);
+  const currentBoard = activeBoards.find(b => b.id === activeBoardId) || activeBoards[0] || { name: 'Board' };
+
+  // Helper to simulate network delay switching boards
+  const handleBoardSwitch = (id: string) => {
+    if (activeBoardId === id && mainAppView === 'Kanban') return;
+    setBoardLoading(true);
+    setBoard(id);
+    setTimeout(() => {
+      setBoardLoading(false);
+    }, 600);
+  };
+
+  const handleBottomLink = (id: string) => {
+    if (id === 'analytics') {
+      setKanbanTab('Analytics');
+    } else if (id === 'team') {
+      setMainView('Team');
+    } else if (id === 'inbox') {
+      setMainView('Inbox');
+    } else if (id === 'settings') {
+      setMainView('Settings');
+    }
+  };
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', position: 'relative', background: 'var(--bg-base)' }}>
@@ -93,22 +125,25 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {/* Workspaces */}
         <div style={{ padding: '10px 12px 6px' }}>
           <div className="nav-section-label">Workspaces</div>
-          {workspaces.map(ws => (
-            <a key={ws.id} href="#" className={`nav-item${ws.active ? ' active' : ''}`}
-              style={{
-                marginBottom: '2px',
-                ...(ws.active ? {
-                  color: ws.accent,
-                  background: `rgba(${ws.rgb},0.07)`,
-                  borderColor: `rgba(${ws.rgb},0.18)`,
-                } : {})
-              }}>
-              <span style={{ fontSize: '17px', lineHeight: 1, color: ws.accent, filter: ws.active ? `drop-shadow(0 0 6px ${ws.accent})` : 'none' }}>{ws.icon}</span>
-              <span style={{ flex: 1, fontSize: '12.5px' }}>{ws.name}</span>
-              <span className="workspace-count">{ws.count}</span>
-              {ws.active && <ChevronRight size={11} style={{ color: ws.accent, flexShrink: 0 }} />}
-            </a>
-          ))}
+          {workspacesConfig.map(ws => {
+            const isActive = ws.id === activeWorkspaceId;
+            return (
+              <a key={ws.id} onClick={(e) => { e.preventDefault(); setWorkspace(ws.id); }} href="#" className={`nav-item${isActive ? ' active' : ''}`}
+                style={{
+                  marginBottom: '2px',
+                  ...(isActive ? {
+                    color: ws.accent,
+                    background: `rgba(${ws.rgb || '255,255,255'},0.07)`,
+                    borderColor: `rgba(${ws.rgb || '255,255,255'},0.18)`,
+                  } : {})
+                }}>
+                <span style={{ fontSize: '17px', lineHeight: 1, color: ws.accent, filter: isActive ? `drop-shadow(0 0 6px ${ws.accent})` : 'none' }}>{ws.icon}</span>
+                <span style={{ flex: 1, fontSize: '12.5px' }}>{ws.name}</span>
+                <span className="workspace-count">{ws.count || 0}</span>
+                {isActive && <ChevronRight size={11} style={{ color: ws.accent, flexShrink: 0 }} />}
+              </a>
+            );
+          })}
         </div>
 
         <div className="sidebar-divider" />
@@ -117,15 +152,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div style={{ padding: '10px 12px 6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px', marginBottom: '4px' }}>
             <div className="nav-section-label" style={{ margin: 0 }}>Active Boards</div>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0, transition: 'color 0.15s' }}
+            <button
+              onClick={openNewBoardModal}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0, transition: 'color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'var(--neon-blue)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
             ><Plus size={12} /></button>
           </div>
-          {boards.map(board => {
+          {activeBoards.map(board => {
             const Icon = board.icon;
+            const isActive = board.id === activeBoardId && mainAppView === 'Kanban';
             return (
-              <a key={board.id} href="#" className={`nav-item${board.active ? ' active' : ''}`}
+              <a key={board.id} onClick={(e) => { e.preventDefault(); handleBoardSwitch(board.id); }} href="#" className={`nav-item${isActive ? ' active' : ''}`}
                 style={{ marginBottom: '2px', fontSize: '12.5px' }}>
                 <Icon size={13} className="nav-icon" />
                 <span style={{ flex: 1 }}>{board.name}</span>
@@ -137,7 +175,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     fontFamily: "'JetBrains Mono', monospace",
                   }}>{board.tag}</span>
                 )}
-                {board.active && <div className="nav-active-dot" />}
+                {isActive && <div className="nav-active-dot" />}
               </a>
             );
           })}
@@ -172,8 +210,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', marginBottom: '12px' }}>
             {bottomLinks.map((link, i) => {
               const Icon = link.icon;
+              const isActive = (link.id === 'analytics' && mainAppView === 'Kanban' && kanbanActiveTab === 'Analytics') ||
+                               (mainAppView !== 'Kanban' && mainAppView.toLowerCase() === link.id);
+              
               return (
-                <a key={i} href="#" className="nav-item" style={{ position: 'relative', justifyContent: 'flex-start', fontSize: '12px', padding: '7px 10px' }}>
+                <a key={i} onClick={(e) => { e.preventDefault(); handleBottomLink(link.id); }} href="#" 
+                   className={`nav-item${isActive ? ' active' : ''}`} style={{ position: 'relative', justifyContent: 'flex-start', fontSize: '12px', padding: '7px 10px' }}>
                   <Icon size={13} className="nav-icon" />
                   <span style={{ flex: 1 }}>{link.label}</span>
                   {link.badge && (
@@ -191,7 +233,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* User */}
         <div style={{ padding: '0 12px 16px' }}>
-          <div className="user-card">
+          <div className="user-card" onClick={() => setMainView('Settings')}>
             <div className="avatar" style={{ background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', width: '34px', height: '34px', fontSize: '10px', flexShrink: 0 }}>JD</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>John Doe</div>
@@ -214,137 +256,166 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             {/* Breadcrumb + Title */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'JetBrains Mono', monospace" }}>Engineering</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: currentWorkspace.accent || 'var(--text-muted)', fontFamily: "'JetBrains Mono', monospace" }}>{currentWorkspace.name}</span>
                 <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '16px', fontWeight: 300 }}>/</span>
-                <h1 style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.025em', color: 'white', margin: 0, fontFamily: "'Outfit', sans-serif" }}>Sprint Backlog</h1>
+                <h1 style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.025em', color: 'white', margin: 0, fontFamily: "'Outfit', sans-serif" }}>{mainAppView === 'Kanban' ? currentBoard.name : mainAppView}</h1>
               </div>
-              <span style={{
-                fontSize: '9.5px', fontFamily: "'JetBrains Mono', monospace",
-                color: 'var(--neon-indigo)', background: 'rgba(129,140,248,0.08)',
-                border: '1px solid rgba(129,140,248,0.2)',
-                padding: '2px 9px', borderRadius: '20px', fontWeight: 700,
-              }}>v2.1.0</span>
-              {/* Sprint indicator */}
-              <span style={{
-                fontSize: '9.5px', fontFamily: "'JetBrains Mono', monospace",
-                color: 'var(--neon-amber)', background: 'rgba(251,191,36,0.07)',
-                border: '1px solid rgba(251,191,36,0.18)',
-                padding: '2px 9px', borderRadius: '20px', fontWeight: 700,
-                display: 'flex', alignItems: 'center', gap: '4px',
-              }}>
-                <GitPullRequest size={10} /> Sprint 14
-              </span>
+              
+              {mainAppView === 'Kanban' && (
+                <>
+                  <span style={{
+                    fontSize: '9.5px', fontFamily: "'JetBrains Mono', monospace",
+                    color: 'var(--neon-indigo)', background: 'rgba(129,140,248,0.08)',
+                    border: '1px solid rgba(129,140,248,0.2)',
+                    padding: '2px 9px', borderRadius: '20px', fontWeight: 700,
+                  }}>v2.1.0</span>
+                  <span style={{
+                    fontSize: '9.5px', fontFamily: "'JetBrains Mono', monospace",
+                    color: 'var(--neon-amber)', background: 'rgba(251,191,36,0.07)',
+                    border: '1px solid rgba(251,191,36,0.18)',
+                    padding: '2px 9px', borderRadius: '20px', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                  }}>
+                    <GitPullRequest size={10} /> Sprint 14
+                  </span>
+                </>
+              )}
             </div>
 
             {/* Right controls */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {/* Search */}
-              <div className="search-wrapper">
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-                <Search className="search-icon" size={13} />
+            {mainAppView === 'Kanban' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* Search */}
+                <div className="search-wrapper">
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Search tasks..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                  <Search className="search-icon" size={13} />
+                </div>
+
+                {/* Filter */}
+                <button className="btn-ghost" style={{ gap: '5px' }}>
+                  <Filter size={12} />
+                  <span>Filter</span>
+                </button>
+
+                {/* Calendar */}
+                <button className="btn-icon">
+                  <Calendar size={15} />
+                </button>
+
+                {/* Activity */}
+                <button className="btn-icon">
+                  <Activity size={15} />
+                </button>
+
+                {/* Notifications */}
+                <button className="btn-icon" style={{ marginLeft: '2px' }} onClick={() => setMainView('Inbox')}>
+                  <Bell size={15} />
+                  <div className="notification-dot" />
+                </button>
+
+                <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)', margin: '0 4px' }} />
+
+                {/* New task */}
+                <button className="btn-primary" onClick={() => openNewTaskModal()}>
+                  <Plus size={14} />
+                  New Task
+                </button>
               </div>
-
-              {/* Filter */}
-              <button className="btn-ghost" style={{ gap: '5px' }}>
-                <Filter size={12} />
-                <span>Filter</span>
-              </button>
-
-              {/* Calendar */}
-              <button className="btn-icon">
-                <Calendar size={15} />
-              </button>
-
-              {/* Activity */}
-              <button className="btn-icon">
-                <Activity size={15} />
-              </button>
-
-              {/* Notifications */}
-              <button className="btn-icon" style={{ marginLeft: '2px' }}>
-                <Bell size={15} />
-                <div className="notification-dot" />
-              </button>
-
-              <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)', margin: '0 4px' }} />
-
-              {/* New task */}
-              <button className="btn-primary">
-                <Plus size={14} />
-                New Task
-              </button>
-            </div>
+            )}
           </div>
         </header>
 
-        {/* Toolbar strip */}
-        <div className="toolbar-strip">
-          {/* View tabs */}
-          <div className="view-tabs">
-            {viewTabs.map(tab => (
-              <button
-                key={tab}
-                className={`view-tab${activeTab === tab ? ' active' : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >{tab}</button>
-            ))}
-          </div>
-
-          {/* Right info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Team avatars */}
-            <div style={{ display: 'flex', alignItems: 'center', marginRight: '4px' }}>
-              {['JD', 'AL', 'MK'].map((init, i) => (
-                <div key={i} className="avatar" style={{
-                  marginLeft: i > 0 ? '-6px' : 0,
-                  background: ['linear-gradient(135deg,#0ea5e9,#6366f1)', 'linear-gradient(135deg,#a78bfa,#ec4899)', 'linear-gradient(135deg,#34d399,#059669)'][i],
-                  width: '24px', height: '24px', fontSize: '7px',
-                  zIndex: 3 - i, border: '2px solid var(--bg-base)',
-                  cursor: 'pointer', transition: 'transform 0.15s',
-                }}
-                  onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)')}
-                  onMouseLeave={e => (e.currentTarget.style.transform = '')}
-                >{init}</div>
+        {/* Toolbar strip (Only on Kanban) */}
+        {mainAppView === 'Kanban' && (
+          <div className="toolbar-strip">
+            {/* View tabs */}
+            <div className="view-tabs">
+              {viewTabs.map(tab => (
+                <button
+                  key={tab}
+                  className={`view-tab${kanbanActiveTab === tab ? ' active' : ''}`}
+                  onClick={() => setKanbanTab(tab)}
+                >{tab}</button>
               ))}
-              <div style={{
-                marginLeft: '-6px', width: '24px', height: '24px', borderRadius: '50%',
-                border: '2px solid var(--bg-base)', background: 'rgba(255,255,255,0.05)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '7px', fontWeight: 700, color: 'var(--text-muted)', zIndex: 0,
-              }}>+2</div>
             </div>
 
-            <div style={{ width: '1px', height: '18px', background: 'var(--border-subtle)' }} />
+            {/* Right info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Team avatars */}
+              <div style={{ display: 'flex', alignItems: 'center', marginRight: '4px' }} onClick={() => setMainView('Team')}>
+                {['JD', 'AL', 'MK'].map((init, i) => (
+                  <div key={i} className="avatar" style={{
+                    marginLeft: i > 0 ? '-6px' : 0,
+                    background: ['linear-gradient(135deg,#0ea5e9,#6366f1)', 'linear-gradient(135deg,#a78bfa,#ec4899)', 'linear-gradient(135deg,#34d399,#059669)'][i],
+                    width: '24px', height: '24px', fontSize: '7px',
+                    zIndex: 3 - i, border: '2px solid var(--bg-base)',
+                    cursor: 'pointer', transition: 'transform 0.15s',
+                  }}
+                    onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px) scale(1.1)')}
+                    onMouseLeave={e => (e.currentTarget.style.transform = '')}
+                  >{init}</div>
+                ))}
+                <div style={{
+                  marginLeft: '-6px', width: '24px', height: '24px', borderRadius: '50%',
+                  border: '2px solid var(--bg-base)', background: 'rgba(255,255,255,0.05)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '7px', fontWeight: 700, color: 'var(--text-muted)', zIndex: 0,
+                  cursor: 'pointer'
+                }}>+2</div>
+              </div>
 
-            <span style={{
-              fontSize: '10px', color: 'var(--text-muted)',
-              fontFamily: "'JetBrains Mono', monospace",
-              display: 'flex', alignItems: 'center', gap: '4px',
-            }}>
-              <Zap size={10} style={{ color: 'var(--neon-amber)' }} />
-              Auto-sync
-            </span>
-            <div className="live-badge">
-              <span className="live-dot" />
-              LIVE
+              <div style={{ width: '1px', height: '18px', background: 'var(--border-subtle)' }} />
+
+              <span style={{
+                fontSize: '10px', color: 'var(--text-muted)',
+                fontFamily: "'JetBrains Mono', monospace",
+                display: 'flex', alignItems: 'center', gap: '4px',
+              }}>
+                <Zap size={10} style={{ color: 'var(--neon-amber)' }} />
+                Auto-sync
+              </span>
+              <div className="live-badge">
+                <span className="live-dot" />
+                LIVE
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Content area */}
         <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: '20px 24px' }}>
-          {activeTab === 'Board' && children}
-          {activeTab === 'List' && <ListView />}
-          {activeTab === 'Timeline' && <TimelineView />}
-          {activeTab === 'Analytics' && <AnalyticsView />}
+          {boardLoading ? (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', color: 'var(--text-muted)' }}>
+              <Loader2 className="spinner" size={32} style={{ animation: 'spin 1s linear infinite', color: currentWorkspace.accent }} />
+              <div style={{ fontSize: '13px', fontWeight: 500 }}>Syncing {currentBoard.name}...</div>
+            </div>
+          ) : (
+            <>
+              {mainAppView === 'Kanban' && kanbanActiveTab === 'Board' && children}
+              {mainAppView === 'Kanban' && kanbanActiveTab === 'List' && <ListView />}
+              {mainAppView === 'Kanban' && kanbanActiveTab === 'Timeline' && <TimelineView />}
+              {mainAppView === 'Kanban' && kanbanActiveTab === 'Analytics' && <AnalyticsView />}
+
+              {mainAppView === 'Team' && <TeamView />}
+              {mainAppView === 'Inbox' && <InboxView />}
+              {mainAppView === 'Settings' && <SettingsView />}
+            </>
+          )}
         </div>
       </main>
+
+      <NewTaskModal />
+      <NewBoardModal />
+
+      <style>{`
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

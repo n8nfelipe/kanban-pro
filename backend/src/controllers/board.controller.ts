@@ -4,11 +4,12 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const getBoards = async (req: any, res: Response) => {
+  const userId = req.userId || 'user-jd'; // Fallback for open auth test
   const boards = await prisma.board.findMany({
     where: {
       OR: [
-        { ownerId: req.userId },
-        { members: { some: { id: req.userId } } }
+        { ownerId: userId },
+        { members: { some: { id: userId } } }
       ]
     }
   });
@@ -16,12 +17,17 @@ export const getBoards = async (req: any, res: Response) => {
 };
 
 export const createBoard = async (req: any, res: Response) => {
-  const { name, description } = req.body;
+  const { name, description, workspaceId, icon, tag } = req.body;
+  const userId = req.userId || 'user-jd'; // Fallback
+  
   const board = await prisma.board.create({
     data: {
       name,
       description,
-      ownerId: req.userId,
+      workspaceId,
+      icon,
+      tag,
+      ownerId: userId,
       columns: {
         create: [
           { title: 'To Do', order: 0 },
@@ -62,16 +68,21 @@ export const createColumn = async (req: Request, res: Response) => {
 };
 
 export const createCard = async (req: Request, res: Response) => {
-  const { title, description, order, priority } = req.body;
-  const card = await prisma.card.create({
-    data: {
-      title,
-      description,
-      order: Number(order),
-      priority,
-      columnId: req.params.columnId as string
-    }
-  });
+  const { title, description, order, priority, startDate, dueDate, assigneeId } = req.body;
+  
+  const data: any = {
+    title,
+    description: description || null,
+    order: Number(order || 0),
+    priority: priority || "medium",
+    columnId: req.params.columnId as string,
+  };
+
+  if (startDate) data.startDate = new Date(startDate);
+  if (dueDate) data.dueDate = new Date(dueDate);
+  if (assigneeId && assigneeId !== 'none') data.assigneeId = assigneeId;
+
+  const card = await prisma.card.create({ data });
   res.status(201).json(card);
 };
 
@@ -94,4 +105,27 @@ export const updateCardColumn = async (req: Request, res: Response) => {
     }
   });
   res.json(card);
+};
+
+export const updateCardFull = async (req: Request, res: Response) => {
+  const { title, description, priority, startDate, dueDate, assigneeId } = req.body;
+  
+  const data: any = {};
+  if (title !== undefined) data.title = title;
+  if (description !== undefined) data.description = description || null;
+  if (priority !== undefined) data.priority = priority;
+
+  if (startDate !== undefined) data.startDate = startDate ? new Date(startDate) : null;
+  if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
+  if (assigneeId !== undefined) data.assigneeId = (assigneeId && assigneeId !== 'none') ? assigneeId : null;
+
+  try {
+    const card = await prisma.card.update({
+      where: { id: req.params.cardId as string },
+      data
+    });
+    res.json(card);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update card' });
+  }
 };

@@ -4,6 +4,7 @@ import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { KanbanCard } from './KanbanCard';
 import { MoreHorizontal, Plus } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 
 const COLUMN_STYLES: Record<string, { accent: string; rgb: string; gradient: string }> = {
   'Backlog':      { accent: '#64748b', rgb: '100,116,139', gradient: 'linear-gradient(135deg, rgba(100,116,139,0.15), rgba(100,116,139,0.05))' },
@@ -20,6 +21,7 @@ const COLUMN_EMOJIS: Record<string, string> = {
 };
 
 export const KanbanColumn = ({ column }: { column: any }) => {
+  const { openNewTaskModal } = useAppStore();
   const style = COLUMN_STYLES[column.title] ?? COLUMN_STYLES['To Do'];
   const emoji = COLUMN_EMOJIS[column.title] ?? '📋';
 
@@ -70,6 +72,7 @@ export const KanbanColumn = ({ column }: { column: any }) => {
           <button
             className="col-action-btn"
             title="Add card"
+            onClick={() => openNewTaskModal(column.id)}
             onMouseEnter={e => { e.currentTarget.style.color = style.accent; e.currentTarget.style.background = `rgba(${style.rgb},0.08)`; }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; }}
           >
@@ -151,6 +154,7 @@ export const KanbanColumn = ({ column }: { column: any }) => {
       {/* Add task */}
       <button
         className="add-task-btn"
+        onClick={() => openNewTaskModal(column.id)}
         onMouseEnter={e => {
           e.currentTarget.style.borderColor = `rgba(${style.rgb},0.3)`;
           e.currentTarget.style.color = style.accent;

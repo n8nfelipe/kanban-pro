@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
-import { Calendar, MoreHorizontal, MessageSquare, Paperclip, CheckCircle2, Clock, Tag } from 'lucide-react';
+import { Calendar, MoreHorizontal, MessageSquare, Paperclip, CheckCircle2, Clock, Tag, Edit2 } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 
 interface Priority {
   label: string;
@@ -38,6 +39,7 @@ interface Props { card: any; index: number; columnAccent?: string; columnRgb?: s
 
 export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
   const [hovered, setHovered] = useState(false);
+  const { openNewTaskModal } = useAppStore();
   const p = PRIORITIES[card.priority] ?? PRIORITIES.medium;
   const isHot = card.priority === 'urgent' || card.priority === 'high';
   const isUrgent = card.priority === 'urgent';
@@ -47,6 +49,11 @@ export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
   const assigneeIdx = card.id.charCodeAt(card.id.length - 1) % ASSIGNEES.length;
   const assignee = ASSIGNEES[assigneeIdx];
   const assigneeColor = ASSIGNEE_COLORS[assigneeIdx];
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // prevent drag or other events if any
+    openNewTaskModal(card.columnId, card.id);
+  };
 
   return (
     <Draggable draggableId={card.id} index={index}>
@@ -125,6 +132,8 @@ export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
                 {p.label}
               </span>
               <button
+                onClick={handleEditClick}
+                title="Edit Task"
                 style={{
                   padding: '4px', background: 'none', border: 'none', cursor: 'pointer',
                   color: 'var(--text-muted)', borderRadius: '6px',
@@ -133,7 +142,7 @@ export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}
               >
-                <MoreHorizontal size={13} />
+                <Edit2 size={13} />
               </button>
             </div>
 
