@@ -392,7 +392,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   backdrop-filter: blur(18px);
-  position: relative; overflow: visible;
+  position: relative; 
+  overflow: hidden;
+  max-height: 100%;
   flex-shrink: 0;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -452,7 +454,8 @@ body {
   min-height: 60px; overflow-y: auto;
   transition: background 0.2s ease;
   border-radius: 10px;
-  padding-bottom: 4px;
+  padding-bottom: 12px;
+  scrollbar-gutter: stable;
 }
 
 /* ===== ADD TASK BUTTON ===== */
@@ -477,6 +480,10 @@ body {
   position: relative; overflow: hidden;
   backdrop-filter: blur(10px);
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 .kanban-card::after {
   content: '';
@@ -579,10 +586,16 @@ body {
 }
 
 /* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.12); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.25); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.3); }
+
+/* Column Specific Scrollbar */
+.cards-drop-zone::-webkit-scrollbar { width: 5px; }
+.cards-drop-zone::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.2); border-radius: 10px; }
+.cards-drop-zone:hover::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.45); }
+.cards-drop-zone::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.01); border-radius: 10px; }
 
 /* ===== TOOLTIP ===== */
 [data-tooltip] {

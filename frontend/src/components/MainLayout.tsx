@@ -389,7 +389,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: '20px 24px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflowX: 'auto', overflowY: 'hidden', padding: '20px 24px' }}>
           {boardLoading ? (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', color: 'var(--text-muted)' }}>
               <Loader2 className="spinner" size={32} style={{ animation: 'spin 1s linear infinite', color: currentWorkspace.accent }} />

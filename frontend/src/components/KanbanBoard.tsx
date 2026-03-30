@@ -43,7 +43,7 @@ export const KanbanBoard = () => {
     <DragDropContext onDragEnd={onDragEnd}>
       <div style={{
         display: 'flex', gap: '14px', height: '100%',
-        alignItems: 'flex-start', paddingBottom: '16px',
+        paddingBottom: '16px', minHeight: 0,
         overflowX: 'auto', overflowY: 'hidden',
       }}>
         {board.columns.map((column: any) => (

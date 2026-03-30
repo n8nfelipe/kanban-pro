@@ -115,7 +115,7 @@ export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
           )}
 
           {/* Content */}
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
 
             {/* Top row: priority + menu */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -148,23 +148,26 @@ export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
 
             {/* Title */}
             <h4 style={{
-              margin: 0, fontSize: '13px', fontWeight: 650, lineHeight: 1.4,
+              margin: 0, fontSize: '13px', fontWeight: 650, lineHeight: 1.3,
               color: hovered ? 'white' : 'var(--text-primary)', letterSpacing: '-0.015em',
               transition: 'color 0.15s',
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
             }}>
               {card.title}
             </h4>
 
-            {/* Description */}
-            {card.description && (
-              <p style={{
-                margin: 0, fontSize: '11.5px', color: 'var(--text-secondary)',
-                lineHeight: 1.65, display: '-webkit-box', WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical', overflow: 'hidden',
-              }}>
-                {card.description}
-              </p>
-            )}
+            {/* Description wrapper to take available space */}
+            <div style={{ flex: 1, minHeight: 0 }}>
+              {card.description && (
+                <p style={{
+                  margin: 0, fontSize: '11.5px', color: 'var(--text-secondary)',
+                  lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }}>
+                  {card.description}
+                </p>
+              )}
+            </div>
 
             {/* Tags */}
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -199,7 +202,8 @@ export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
             {/* Footer */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)',
+              paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)',
+              marginTop: 'auto'
             }}>
               {/* Due date */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--text-muted)' }}>

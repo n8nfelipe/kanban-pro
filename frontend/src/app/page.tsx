@@ -25,7 +25,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <KanbanBoard />
     </div>
   );

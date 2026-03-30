@@ -28,7 +28,12 @@ export const KanbanColumn = ({ column }: { column: any }) => {
   return (
     <div
       className="kanban-column"
-      style={{ height: '100%' }}
+      style={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}
     >
       {/* Top accent gradient */}
       <div className="col-top-accent" style={{ background: style.gradient.replace('linear-gradient(135deg, ', 'linear-gradient(90deg, transparent, ').replace(', rgba', ', ').split(', rgba')[0] + ', transparent)' }} />
@@ -124,6 +129,7 @@ export const KanbanColumn = ({ column }: { column: any }) => {
                 ? `1px dashed rgba(${style.rgb},0.25)`
                 : '1px solid transparent',
               transition: 'all 0.2s ease',
+              minHeight: 0
             }}
           >
             {column.cards.map((card: any, index: number) => (
