@@ -1,7 +1,10 @@
 import React from 'react';
 import { Monitor, Bell, Shield, Cloud, CreditCard, Save } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function SettingsView() {
+  const { theme, setTheme, auroraEnabled, setAuroraEnabled, autoSyncEnabled, setAutoSyncEnabled, saveSettings } = useAppStore();
+
   const settingsSections = [
     { title: 'Appearance & System', icon: <Monitor size={18} />, desc: 'Configure theme and default views', id: 'appearance' },
     { title: 'Notifications', icon: <Bell size={18} />, desc: 'Manage email and app alerts', id: 'alerts' },
@@ -10,6 +13,18 @@ export default function SettingsView() {
     { title: 'Billing', icon: <CreditCard size={18} />, desc: 'Manage Enterprise subscription', id: 'billing' },
   ];
 
+  const handleThemeChange = (newTheme: 'dark' | 'light' | 'system') => {
+    setTheme(newTheme);
+  };
+
+  const handleAuroraToggle = () => {
+    setAuroraEnabled(!auroraEnabled);
+  };
+
+  const handleAutoSyncToggle = () => {
+    setAutoSyncEnabled(!autoSyncEnabled);
+  };
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '24px', animation: 'aurora-appear 0.4s ease-out' }}>
       <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -17,7 +32,7 @@ export default function SettingsView() {
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'white', fontFamily: "'Outfit', sans-serif", margin: 0 }}>System Settings</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>Control your workspace preferences.</p>
         </div>
-        <button className="btn-primary" style={{ padding: '10px 20px' }}><Save size={14}/> Save Changes</button>
+        <button className="btn-primary" style={{ padding: '10px 20px' }} onClick={saveSettings}><Save size={14}/> Save Changes</button>
       </div>
 
       <div style={{ display: 'flex', gap: '32px', flex: 1, minHeight: 0 }}>
@@ -51,9 +66,24 @@ export default function SettingsView() {
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Choose your workspace theme structure.</div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="btn-ghost">Light</button>
-                <button className="btn-primary" style={{ boxShadow: 'none' }}>Premium Dark</button>
-                <button className="btn-ghost">System</button>
+                <button 
+                  className={`btn-ghost${theme === 'light' ? ' btn-primary' : ''}`} 
+                  onClick={() => handleThemeChange('light')}
+                >
+                  Light
+                </button>
+                <button 
+                  className={`btn-ghost${theme === 'dark' ? ' btn-primary' : ''}`} 
+                  onClick={() => handleThemeChange('dark')}
+                >
+                  Premium Dark
+                </button>
+                <button 
+                  className={`btn-ghost${theme === 'system' ? ' btn-primary' : ''}`} 
+                  onClick={() => handleThemeChange('system')}
+                >
+                  System
+                </button>
               </div>
             </div>
 
@@ -63,8 +93,22 @@ export default function SettingsView() {
                 <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Aurora Effects</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Enable dynamic animated gradient backgrounds.</div>
               </div>
-              <div style={{ width: '40px', height: '20px', background: 'var(--neon-green)', borderRadius: '10px', position: 'relative', cursor: 'pointer', boxShadow: '0 0 10px rgba(52,211,153,0.3)' }}>
-                <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', position: 'absolute', right: '2px', top: '2px' }} />
+              <div 
+                style={{ 
+                  width: '40px', height: '20px', 
+                  background: auroraEnabled ? 'var(--neon-green)' : 'rgba(255,255,255,0.2)', 
+                  borderRadius: '10px', position: 'relative', cursor: 'pointer', 
+                  boxShadow: auroraEnabled ? '0 0 10px rgba(52,211,153,0.3)' : 'none',
+                  transition: 'all 0.2s'
+                }}
+                onClick={handleAuroraToggle}
+              >
+                <div style={{ 
+                  width: '16px', height: '16px', background: 'white', borderRadius: '50%', 
+                  position: 'absolute', 
+                  left: auroraEnabled ? '22px' : '2px', top: '2px',
+                  transition: 'left 0.2s'
+                }} />
               </div>
             </div>
 
@@ -74,8 +118,22 @@ export default function SettingsView() {
                 <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Auto-Sync Dashboards</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Keep Timeline and Analytics synced with Board changes via WebSockets.</div>
               </div>
-              <div style={{ width: '40px', height: '20px', background: 'var(--neon-green)', borderRadius: '10px', position: 'relative', cursor: 'pointer', boxShadow: '0 0 10px rgba(52,211,153,0.3)' }}>
-                <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', position: 'absolute', right: '2px', top: '2px' }} />
+              <div 
+                style={{ 
+                  width: '40px', height: '20px', 
+                  background: autoSyncEnabled ? 'var(--neon-green)' : 'rgba(255,255,255,0.2)', 
+                  borderRadius: '10px', position: 'relative', cursor: 'pointer', 
+                  boxShadow: autoSyncEnabled ? '0 0 10px rgba(52,211,153,0.3)' : 'none',
+                  transition: 'all 0.2s'
+                }}
+                onClick={handleAutoSyncToggle}
+              >
+                <div style={{ 
+                  width: '16px', height: '16px', background: 'white', borderRadius: '50%', 
+                  position: 'absolute', 
+                  left: autoSyncEnabled ? '22px' : '2px', top: '2px',
+                  transition: 'left 0.2s'
+                }} />
               </div>
             </div>
 

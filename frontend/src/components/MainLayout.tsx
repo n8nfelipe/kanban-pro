@@ -32,7 +32,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const {
     activeWorkspaceId, activeBoardId, mainAppView, kanbanActiveTab, boardsList,
     setWorkspace, setBoard, setMainView, setKanbanTab, openNewTaskModal, openNewBoardModal,
-    workspacesConfig, fetchWorkspaces, searchQuery, setSearchQuery
+    workspacesConfig, fetchWorkspaces, searchQuery, setSearchQuery, setTheme, auroraEnabled, loadSettings
   } = useAppStore();
 
   const { user, loading, fetchUser, logout } = useAuthStore();
@@ -45,8 +45,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (user) {
       fetchWorkspaces();
+      loadSettings();
     }
-  }, [user, fetchWorkspaces]);
+  }, [user, fetchWorkspaces, loadSettings]);
 
   // Show loading while checking auth
   if (loading) {
@@ -94,11 +95,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', position: 'relative', background: 'var(--bg-base)' }}>
 
       {/* ─── BACKGROUND LAYERS ─── */}
-      <div className="aurora-bg">
-        <div className="aurora-orb aurora-orb-1" />
-        <div className="aurora-orb aurora-orb-2" />
-        <div className="aurora-orb aurora-orb-3" />
-      </div>
+      {auroraEnabled && (
+        <div className="aurora-bg">
+          <div className="aurora-orb aurora-orb-1" />
+          <div className="aurora-orb aurora-orb-2" />
+          <div className="aurora-orb aurora-orb-3" />
+        </div>
+      )}
       <div className="grid-bg" />
       <div className="scanline" />
 

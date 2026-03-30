@@ -16,6 +16,9 @@ interface AppState {
   editTaskId: string | null;
   isNewBoardModalOpen: boolean;
   searchQuery: string;
+  theme: 'dark' | 'light' | 'system';
+  auroraEnabled: boolean;
+  autoSyncEnabled: boolean;
   
   fetchWorkspaces: () => Promise<void>;
   setWorkspace: (id: string) => void;
@@ -28,6 +31,11 @@ interface AppState {
   closeNewBoardModal: () => void;
   addBoard: (boardData: any) => void;
   setSearchQuery: (query: string) => void;
+  setTheme: (theme: 'dark' | 'light' | 'system') => void;
+  setAuroraEnabled: (enabled: boolean) => void;
+  setAutoSyncEnabled: (enabled: boolean) => void;
+  saveSettings: () => void;
+  loadSettings: () => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -42,6 +50,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   editTaskId: null,
   isNewBoardModalOpen: false,
   searchQuery: '',
+  theme: 'dark',
+  auroraEnabled: true,
+  autoSyncEnabled: true,
 
   fetchWorkspaces: async () => {
     try {
@@ -102,4 +113,42 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
   setSearchQuery: (query) => set({ searchQuery: query }),
+  setTheme: (theme) => {
+    set({ theme });
+    // Apply theme to document
+    if (theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  },
+  setAuroraEnabled: (enabled) => set({ auroraEnabled: enabled }),
+  setAutoSyncEnabled: (enabled) => set({ autoSyncEnabled: enabled }),
+  saveSettings: () => {
+    const state = get();
+    localStorage.setItem('kanban-settings', JSON.stringify({
+      theme: state.theme,
+      auroraEnabled: state.auroraEnabled,
+      autoSyncEnabled: state.autoSyncEnabled,
+    }));
+  },
+  loadSettings: () => {
+    const settings = localStorage.getItem('kanban-settings');
+    if (settings) {
+      const parsed = JSON.parse(settings);
+      set({
+        theme: parsed.theme || 'dark',
+        auroraEnabled: parsed.auroraEnabled ?? true,
+        autoSyncEnabled: parsed.autoSyncEnabled ?? true,
+      });
+      // Apply theme
+      if (parsed.theme === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', parsed.theme || 'dark');
+      }
+    }
+  },
 }));
