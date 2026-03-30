@@ -1,28 +1,55 @@
 import React, { useMemo } from 'react';
 import { useBoardStore } from '@/store/useBoardStore';
+import { useAppStore } from '@/store/useAppStore';
 import { Activity, Target, Zap, Clock } from 'lucide-react';
 
 export default function AnalyticsView() {
   const { board } = useBoardStore();
+  const { searchQuery } = useAppStore();
 
   const metrics = useMemo(() => {
     if (!board) return { total: 0, done: 0, byPriority: { urgent: 0, high: 0, medium: 0, low: 0 }, byCol: [] };
 
-    let total = 0;
+    let allCards: any[] = [];
+    board.columns.forEach((col: any) => {
+      col.cards.forEach((card: any) => {
+        allCards.push({ ...card, columnTitle: col.title });
+      });
+    });
+
+    // Filter cards based on search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      allCards = allCards.filter((card: any) =>
+        card.title?.toLowerCase().includes(query) ||
+        card.description?.toLowerCase().includes(query) ||
+        card.priority?.toLowerCase().includes(query)
+      );
+    }
+
+    let total = allCards.length;
     let done = 0;
     const byPriority: Record<string, number> = { urgent: 0, high: 0, medium: 0, low: 0 };
     const byCol: { title: string, count: number }[] = [];
 
+    // Group filtered cards by column
+    const colMap: Record<string, any[]> = {};
+    allCards.forEach((card: any) => {
+      if (!colMap[card.columnTitle]) colMap[card.columnTitle] = [];
+      colMap[card.columnTitle].push(card);
+    });
+
     board.columns.forEach((col: any) => {
-      const count = col.cards.length;
-      total += count;
+      const filteredCards = colMap[col.title] || [];
+      const count = filteredCards.length;
+      total = allCards.length; // already set
       byCol.push({ title: col.title, count });
-      
+
       if (col.title.toLowerCase().includes('done')) {
         done += count;
       }
 
-      col.cards.forEach((card: any) => {
+      filteredCards.forEach((card: any) => {
         if (byPriority[card.priority] !== undefined) {
           byPriority[card.priority]++;
         }
@@ -30,7 +57,7 @@ export default function AnalyticsView() {
     });
 
     return { total, done, byPriority, byCol };
-  }, [board]);
+  }, [board, searchQuery]);
 
   if (!board) return null;
 

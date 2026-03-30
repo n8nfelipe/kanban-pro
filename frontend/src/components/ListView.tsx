@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { useBoardStore } from '@/store/useBoardStore';
+import { useAppStore } from '@/store/useAppStore';
 import { Calendar, User, AlignLeft, ShieldAlert } from 'lucide-react';
 
-interface ListViewProps {}
-
-export default function ListView({}: ListViewProps) {
+export default function ListView() {
   const { board } = useBoardStore();
+  const { searchQuery } = useAppStore();
 
   const allCards = useMemo(() => {
     if (!board) return [];
@@ -16,8 +16,16 @@ export default function ListView({}: ListViewProps) {
         cards.push({ ...card, columnTitle: col.title });
       });
     });
-    return cards;
-  }, [board]);
+
+    if (!searchQuery.trim()) return cards;
+
+    const query = searchQuery.toLowerCase().trim();
+    return cards.filter((card: any) =>
+      card.title?.toLowerCase().includes(query) ||
+      card.description?.toLowerCase().includes(query) ||
+      card.priority?.toLowerCase().includes(query)
+    );
+  }, [board, searchQuery]);
 
   if (!board) {
     return (

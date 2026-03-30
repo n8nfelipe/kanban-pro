@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { useBoardStore } from '@/store/useBoardStore';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function TimelineView() {
   const { board } = useBoardStore();
+  const { searchQuery } = useAppStore();
 
   const TIMELINE_START = new Date('2026-03-18T00:00:00Z');
   const TIMELINE_DAYS = 24;
@@ -11,7 +13,7 @@ export default function TimelineView() {
   const { cards, dates } = useMemo(() => {
     if (!board) return { cards: [], dates: [] };
 
-    const flatCards: any[] = [];
+    let flatCards: any[] = [];
     board.columns.forEach((col: any) => {
       col.cards.forEach((c: any) => {
         if (c.startDate && c.dueDate) {
@@ -19,6 +21,17 @@ export default function TimelineView() {
         }
       });
     });
+
+    if (!searchQuery.trim()) {
+      // No filtering needed
+    } else {
+      const query = searchQuery.toLowerCase().trim();
+      flatCards = flatCards.filter((card: any) =>
+        card.title?.toLowerCase().includes(query) ||
+        card.description?.toLowerCase().includes(query) ||
+        card.priority?.toLowerCase().includes(query)
+      );
+    }
 
     const dts = [];
     for (let i = 0; i < TIMELINE_DAYS; i++) {
@@ -28,7 +41,7 @@ export default function TimelineView() {
     }
 
     return { cards: flatCards, dates: dts };
-  }, [board, TIMELINE_START, TIMELINE_DAYS]);
+  }, [board, searchQuery, TIMELINE_START, TIMELINE_DAYS]);
 
   if (!board) return null;
 

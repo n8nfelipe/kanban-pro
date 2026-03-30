@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   LayoutGrid, Layers, Users, Settings2, Bell, Search, Plus,
   Filter, Zap, ChevronRight, BarChart3, Calendar, Inbox,
-  Hash, Star, Activity, Command, GitPullRequest, Loader2
+  Hash, Star, Activity, Command, GitPullRequest, Loader2, LogOut
 } from 'lucide-react';
 import ListView from './ListView';
 import TimelineView from './TimelineView';
@@ -14,7 +14,9 @@ import InboxView from './InboxView';
 import SettingsView from './SettingsView';
 import NewTaskModal from './NewTaskModal';
 import NewBoardModal from './NewBoardModal';
+import AuthPage from './AuthPage';
 import { useAppStore, MainAppView, KanbanTab } from '@/store/useAppStore';
+import { useAuthStore } from '@/store/useAuthStore';
 // import { MOCK_WORKSPACES } from '@/lib/mockData';
 
 const bottomLinks = [
@@ -30,15 +32,36 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const {
     activeWorkspaceId, activeBoardId, mainAppView, kanbanActiveTab, boardsList,
     setWorkspace, setBoard, setMainView, setKanbanTab, openNewTaskModal, openNewBoardModal,
-    workspacesConfig, fetchWorkspaces
+    workspacesConfig, fetchWorkspaces, searchQuery, setSearchQuery
   } = useAppStore();
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const { user, loading, fetchUser, logout } = useAuthStore();
   const [boardLoading, setBoardLoading] = useState(false);
 
   useEffect(() => {
-    fetchWorkspaces();
-  }, [fetchWorkspaces]);
+    fetchUser();
+  }, [fetchUser]);
+
+  useEffect(() => {
+    if (user) {
+      fetchWorkspaces();
+    }
+  }, [user, fetchWorkspaces]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
+        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--neon-blue)' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // Show auth page if not logged in
+  if (!user) {
+    return <AuthPage />;
+  }
 
   // Derive current display names
   const currentWorkspace = workspacesConfig.find(w => w.id === activeWorkspaceId) || workspacesConfig[0] || { name: 'Loading...', accent: '#666', icon: '◌' };
@@ -234,15 +257,25 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {/* User */}
         <div style={{ padding: '0 12px 16px' }}>
           <div className="user-card" onClick={() => setMainView('Settings')}>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', width: '34px', height: '34px', fontSize: '10px', flexShrink: 0 }}>JD</div>
+            <div className="avatar" style={{ background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', width: '34px', height: '34px', fontSize: '10px', flexShrink: 0 }}>
+              {user.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>John Doe</div>
+              <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>{user.name}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
                 <div className="status-dot" />
-                <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)' }}>Online · Admin</span>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)' }}>{user.email}</span>
               </div>
             </div>
-            <Settings2 size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, transition: 'color 0.2s' }} />
+            <button
+              onClick={(e) => { e.stopPropagation(); logout(); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px', transition: 'color 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+              title="Logout"
+            >
+              <LogOut size={14} />
+            </button>
           </div>
         </div>
       </aside>
@@ -389,7 +422,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         )}
 
         {/* Content area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflowX: 'auto', overflowY: 'hidden', padding: '20px 24px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', padding: '20px 24px' }}>
           {boardLoading ? (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', color: 'var(--text-muted)' }}>
               <Loader2 className="spinner" size={32} style={{ animation: 'spin 1s linear infinite', color: currentWorkspace.accent }} />

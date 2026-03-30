@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import boardRoutes from './routes/board.routes';
 import workspaceRoutes from './routes/workspace.routes';
+import userRoutes from './routes/user.routes';
 import { setupSocket } from './services/socket.service';
 
 dotenv.config();
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/boards', boardRoutes);
+app.use('/api/users', userRoutes);
 
 // Socket setup
 setupSocket(io);

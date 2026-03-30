@@ -161,10 +161,9 @@ export const KanbanCard = ({ card, index, columnAccent, columnRgb }: Props) => {
               {card.description && (
                 <p style={{
                   margin: 0, fontSize: '11.5px', color: 'var(--text-secondary)',
-                  lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  {card.description}
+                  {card.description?.slice(0, 40)}{card.description?.length > 40 ? '...' : ''}
                 </p>
               )}
             </div>

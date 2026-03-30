@@ -26,15 +26,7 @@ export const KanbanColumn = ({ column }: { column: any }) => {
   const emoji = COLUMN_EMOJIS[column.title] ?? '📋';
 
   return (
-    <div
-      className="kanban-column"
-      style={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}
-    >
+    <div className="kanban-column">
       {/* Top accent gradient */}
       <div className="col-top-accent" style={{ background: style.gradient.replace('linear-gradient(135deg, ', 'linear-gradient(90deg, transparent, ').replace(', rgba', ', ').split(', rgba')[0] + ', transparent)' }} />
       {/* Cleaner top accent */}

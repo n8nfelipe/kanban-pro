@@ -15,6 +15,7 @@ interface AppState {
   newTaskTargetColumnId: string | null;
   editTaskId: string | null;
   isNewBoardModalOpen: boolean;
+  searchQuery: string;
   
   fetchWorkspaces: () => Promise<void>;
   setWorkspace: (id: string) => void;
@@ -26,6 +27,7 @@ interface AppState {
   openNewBoardModal: () => void;
   closeNewBoardModal: () => void;
   addBoard: (boardData: any) => void;
+  setSearchQuery: (query: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -39,6 +41,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   newTaskTargetColumnId: null,
   editTaskId: null,
   isNewBoardModalOpen: false,
+  searchQuery: '',
 
   fetchWorkspaces: async () => {
     try {
@@ -98,4 +101,5 @@ export const useAppStore = create<AppState>((set, get) => ({
       console.error(err);
     }
   },
+  setSearchQuery: (query) => set({ searchQuery: query }),
 }));

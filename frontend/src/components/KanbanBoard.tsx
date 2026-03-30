@@ -1,17 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { KanbanColumn } from './KanbanColumn';
 import { useBoardStore } from '@/store/useBoardStore';
+import { useAppStore } from '@/store/useAppStore';
 import { Plus, LayoutGrid, X } from 'lucide-react';
 
 export const KanbanBoard = () => {
   const { board, moveCard, addColumn } = useBoardStore();
+  const { searchQuery } = useAppStore();
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
 
-  if (!board) return (
+  // Filter cards based on search query
+  const filteredBoard = useMemo(() => {
+    if (!board) return null;
+    if (!searchQuery.trim()) return board;
+
+    const query = searchQuery.toLowerCase().trim();
+    const filteredColumns = board.columns.map((column: any) => ({
+      ...column,
+      cards: column.cards.filter((card: any) =>
+        card.title?.toLowerCase().includes(query) ||
+        card.description?.toLowerCase().includes(query) ||
+        card.priority?.toLowerCase().includes(query)
+      )
+    }));
+
+    return { ...board, columns: filteredColumns };
+  }, [board, searchQuery]);
+
+  if (!filteredBoard) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px' }}>
       <div style={{
         width: '24px', height: '24px', borderRadius: '50%',
@@ -46,7 +66,7 @@ export const KanbanBoard = () => {
         paddingBottom: '16px', minHeight: 0,
         overflowX: 'auto', overflowY: 'hidden',
       }}>
-        {board.columns.map((column: any) => (
+        {filteredBoard.columns.map((column: any) => (
           <KanbanColumn key={column.id} column={column} />
         ))}
 
